@@ -3,6 +3,7 @@ import datetime
 from heapq import merge
 import openpyxl
 import os
+import os.path
 import random
 
 idcheckcliente=[]
@@ -25,6 +26,7 @@ libro = openpyxl.Workbook()
 hoja = libro["Sheet"]
 hoja.title = "Reporte "
 #///
+diccionarioTest={}
 
 def registrocliente():
     idclientes=max(diccionarioClientes.keys(), default=0)+1
@@ -42,6 +44,7 @@ def registrosala():
     #x=0
     #while x==0:
     try:
+        
         cupo_sala = int((input('Cupo de la sala: ')))
     except ValueError:
         print("Respuesta no valida: Solo se acepta numero")
@@ -53,6 +56,12 @@ def registrosala():
     print("La sala ha sido registrada correctamente")
 
 def registroreservacion():
+    if diccionarioSalas=={}:        #checa si hay salas registradas
+            print('Error: No hay salas registradas')
+            return
+    if diccionarioClientes=={}:     #checa si hay clientes registrados
+            print('Error: No hay clientes registrados')
+            return
     fecha=[]
     try: #try para prevenir error de mal fecha ingresada
         fecha_capturada = input("Dime una fecha (dd/mm/aaaa): \n")
@@ -60,7 +69,7 @@ def registroreservacion():
     except ValueError:
         print("Respuesta no valida: Solo se acepta fecha")
         return
-    fecha.append(fechareservacion)                                                         #guarda fecha en lista temporal
+    fecha.append(str(fechareservacion))                                                         #guarda fecha en lista temporal
     fechaactual=datetime.datetime.today().date()                                        #fecha actual
     fechalimite= fechareservacion + datetime.timedelta(days=-2)                         #fecha 2 dias antes de reservacion
     if fechaactual >= fechalimite:                                                      #Compara que la fecha sea valida
@@ -87,18 +96,12 @@ def registroreservacion():
             turno=3
             fecha.append(turnos[turno])
         for x in range(len(listafechas)):
-            if listafechas[x]==fecha:
+            if str(listafechas[x])==str(fecha):
                 print('Turno ya ocupado. No puede realizarse la reservacion.')           #checa si la fecha y turno son iguales
                 return
         listafechas.append(fecha)
-        if diccionarioSalas=={}:        #checa si hay salas registradas
-            print('Error: No hay salas registradas')
-            return
         print(diccionarioSalas)
         numerosala=input('Ingresa el numero de sala que quieres usar: ')
-        if diccionarioClientes=={}:     #checa si hay clientes registrados
-            print('Error: No hay clientes registrados')
-            return
         print(diccionarioClientes)
         numerocliente=input('Ingresa tu id asignado: ')
         tuplareserv=(str(fecha[0]),int(numerosala),int(numerocliente),nombrereservacion,turno)  #dd/mm/aaaa,id sala,id cliente,nombre reserva,turno
@@ -235,6 +238,61 @@ def consultasala():
     for sala,turno in salasTurnosDisponibles:
         print(f"{sala},{diccionarioSalas[sala][0]}\t\t{turnos[turno]}")
 
+#CARGA DE DATOS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#diccionarioClientes
+if os.path.exists('diccionarioClientes.csv') == False:
+    with open('diccionarioClientes.csv','w') as f:
+        f.close()
+with open('diccionarioClientes.csv','r',newline='') as archivo:
+    reader = csv.reader(archivo)
+    diccionarioTest.clear()
+    diccionarioTest.update(reader)
+    for llave in diccionarioTest.copy():
+        diccionarioTest[int(llave)] = diccionarioTest[llave]
+        del diccionarioTest[llave]
+    diccionarioClientes.update(diccionarioTest)
+    print(diccionarioClientes)
+
+#diccionarioSalas
+if os.path.exists('diccionarioSalas.csv') == False:
+    with open('diccionarioSalas.csv','w') as f:
+        f.close()
+with open('diccionarioSalas.csv','r',newline='') as archivo:
+    reader = csv.reader(archivo)
+    diccionarioTest.clear()
+    diccionarioTest.update(reader)
+    for llave in diccionarioTest.copy():
+        diccionarioTest[int(llave)] = diccionarioTest[llave]
+        del diccionarioTest[llave]
+        diccionarioTest[int(llave)] = eval(diccionarioTest[int(llave)])
+    diccionarioSalas.update(diccionarioTest)
+    print(diccionarioSalas)
+
+#diccionarioreserv
+if os.path.exists('diccionarioreserv.csv') == False:
+    with open('diccionarioreserv.csv','w') as f:
+        f.close()
+with open('diccionarioreserv.csv','r',newline='') as archivo:
+    reader = csv.reader(archivo)
+    diccionarioTest.clear()
+    diccionarioTest.update(reader)
+    for llave in diccionarioTest.copy():
+        diccionarioTest[int(llave)] = diccionarioTest[llave]
+        del diccionarioTest[llave]
+        diccionarioTest[int(llave)] = eval(diccionarioTest[int(llave)])
+    diccionarioreserv.update(diccionarioTest)
+    print(diccionarioreserv)
+
+#listafechas
+if os.path.exists('listafechas.csv') == False:
+    with open('listafechas.csv','w') as f:
+        f.close()
+with open('listafechas.csv','r',newline='') as archivo:
+    reader = csv.reader(archivo)
+    listafechas = list(reader)
+    print(listafechas)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 while True:
     print('*'*14)
     print('MENU DE OPCIONES')
@@ -253,6 +311,27 @@ while True:
 
     #OPCION=SALIR
     if (opmenu.upper()=="E"):
+        
+        with open('diccionarioSalas.csv','w',newline='') as archivo:    #Guarda diccionarioSalas
+            writer = csv.writer(archivo)
+            for key, value in diccionarioSalas.items():
+                writer.writerow([key, value])
+        
+        with open('diccionarioClientes.csv','w',newline='') as archivo: #Guarda diccionarioClientes
+            writer = csv.writer(archivo)
+            for key, value in diccionarioClientes.items():
+                writer.writerow([key, value])
+        
+        with open('diccionarioreserv.csv','w',newline='') as archivo: #Guarda diccionarioreserv
+            writer = csv.writer(archivo)
+            for key, value in diccionarioreserv.items():
+                writer.writerow([key, value])
+        
+        with open('listafechas.csv','w',newline='') as archivo:
+            writer = csv.writer(archivo)
+            for value in listafechas:
+                writer.writerow(value)
+        
         print("Fin de la ejecución.")
         break
 
