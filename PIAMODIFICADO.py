@@ -60,13 +60,15 @@ if os.path.isfile("PIA.db"):
                 print('D. ELIMINAR RESERVACIÓN')
                 print('E. REGRESAR AL MENU')
                 submenur=input('\nEscoge la opción: ')
+
+
                 if (not submenur.upper() in "ABCDE"):
                     print("Opción no válida, intenta de nuevo.")
                     continue
                 if (submenur.upper()=="A"):#REGISTRAR NUEVA RESERVACIÓN
                     while True:
                         try: #try para prevenir error de mal fecha ingresada
-                            fecha_capturada=input("Ingrese la fecha para la reservacion: \n")
+                            fecha_capturada=input("Ingrese la fecha para la reservacion: \n").strip()
                             if fecha_capturada=='':
                                 print("No debe omitirse la fecha de la reservacion")
                                 continue
@@ -102,6 +104,10 @@ if os.path.isfile("PIA.db"):
                                                 if Turno=='':
                                                     print("No debe omitirse el turno")
                                                     continue
+                                                elif Turno<=0:
+                                                    print("No se aceptan numeros negativos...Debe ser mayor a 0")
+                                                    continue
+
                                                 else:
                                                     valores = {"Claveturno":Turno}
                                                     cursor.execute("SELECT * FROM TURNO WHERE idturno = :Claveturno", valores)
@@ -126,20 +132,30 @@ if os.path.isfile("PIA.db"):
                                                 cursor.execute("SELECT * FROM  registrosala ORDER BY idsala")
                                                 regsala = cursor.fetchall()
                                                 if regsala:
+
                                                     print("\nSALAS REGISTRADAS....")
                                                     print("--" * 30)
                                                     print("***idsala***\t***salas***\t***cupo_sala***")
                                                     print("--" * 30)
+
                                                     for idsala, salas, cupo_sala in regsala:
                                                         print(f"{idsala:^10}\t{salas:^10}\t{cupo_sala}")
+
                                                     Sala=int(input("Ingresa el numero de la sala que desea reservar : "))
+                                                    
                                                     if Sala=='':
                                                         print("No debe omitirse el sala")
                                                         continue
+
+                                                    elif Sala<=0:
+                                                        print("No se aceptan numeros negativos...Debe ser mayor a 0")
+                                                        continue
+
                                                     else:
                                                         valores = {"Clavesala":Sala}
                                                         cursor.execute("SELECT * FROM registrosala WHERE idsala = :Clavesala", valores)
                                                         regsala = cursor.fetchall()
+
                                                         if regsala:
                                                             for Clavesala, salas, cupo_sala in regsala:
                                                                 print("SE REGISTRO CORRECTAMENTE")
@@ -170,6 +186,9 @@ if os.path.isfile("PIA.db"):
                                                         if Cliente=='':
                                                             print("No debe omitirse el cliente")
                                                             continue
+                                                        elif Cliente<=0:
+                                                            print("No se aceptan numeros negativos...Debe ser mayor a 0")
+                                                            continue
                                                         else:
                                                             valores = {"Clavecliente":Cliente}
                                                             cursor.execute("SELECT * FROM registrocliente WHERE idcliente = :Clavecliente", valores)
@@ -181,18 +200,18 @@ if os.path.isfile("PIA.db"):
                                                             else:
                                                                 print("No se encontraron registros en la respuesta")
                                                                 continue
-                                                            try:
-                                                                with sqlite3.connect("PIA.db") as conn:
-                                                                    cursor=conn.cursor()
-                                                                    valores={"Nombrereservacion":NomRes, "fechareservacion":fechareservacion, "idcliente":Cliente,"idturno":Turno,"idsala":Sala}
-                                                                    cursor.execute("INSERT INTO RESERVACION(nombrereservacion,fechareservacion,idcliente,idturno,idsala) VALUES(:Nombrereservacion,:fechareservacion,:idcliente,:idturno,:idsala)", valores)
-                                                                    print("Registro ha sido exitoso")
-                                                            except Error as e:
-                                                                print(e)
-                                                            except:
-                                                                print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")
-                                                            finally:
-                                                                conn.close()
+                                            except Error as e:
+                                                print(e)
+                                            except:
+                                                print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")
+                                            finally:
+                                                conn.close()
+                                            try:
+                                                with sqlite3.connect("PIA.db") as conn:
+                                                    cursor=conn.cursor()
+                                                    valores={"Nombrereservacion":NomRes, "fechareservacion":fechareservacion, "idcliente":Cliente,"idturno":Turno,"idsala":Sala}
+                                                    cursor.execute("INSERT INTO RESERVACION(nombrereservacion,fechareservacion,idcliente,idturno,idsala) VALUES(:Nombrereservacion,:fechareservacion,:idcliente,:idturno,:idsala)", valores)
+                                                    print(f"{valores}")
                                             except Error as e:
                                                 print(e)
                                             except:
@@ -228,6 +247,12 @@ if os.path.isfile("PIA.db"):
                                                         print("{:<20} {:<20} {:<20} {:<20} {:<10} {:<10}".format(idreserv ,nombrereservacion,fechareservacion,clientes,idturno,salas))
                                                         continue
                                             buscarclave=int(input("Ingrese la clave del registro que va a editar : "))
+                                            if buscarclave=='':
+                                                print("No debe omitirse el turno")
+                                                continue
+                                            elif buscarclave<=0:
+                                                print("No se aceptan numeros negativos...Debe ser mayor a 0")
+                                                continue
                                             valor={"Clavereser":buscarclave}
                                             cursor.execute("SELECT * FROM RESERVACION WHERE idreserv= :Clavereser",valor)
                                             regreserva = cursor.fetchall()
@@ -239,11 +264,14 @@ if os.path.isfile("PIA.db"):
                                                 if regclie:
                                                     if regsala:
                                                         print("")
-                                                        nuevo_nombre=input("Ingrese el nuevo nombre de la reservacion  : ")
+                                                        nuevo_nombre=input("Ingrese el nuevo nombre de la reservacion  : ").strip()
+                                                        if nuevo_nombre=='':
+                                                            print("No debe omitirse")
+                                                            continue
                                                         valores = {"Nombrereservacion":nuevo_nombre,"Clavereser":buscarclave}
                                                         cursor.execute("UPDATE RESERVACION SET nombrereservacion = :Nombrereservacion WHERE idreserv=:Clavereser",valores)
                                                         regreserva = cursor.fetchall()
-                                                        print("El registro se edito exitosamente")
+                                                        print(f"El registro se edito exitosamente a : {valores}")
                                                         break
                                             else:
                                                 if not idreserv in regreserva:
@@ -261,6 +289,7 @@ if os.path.isfile("PIA.db"):
                     while True:
                         try:
                             fechaInput = input("Dime una fecha (dd/mm/aaaa): \n")
+
                             if fechaInput =='':
                                 print("No debe omitirse la fecha de la reservacion")
                                 continue
@@ -346,16 +375,18 @@ if os.path.isfile("PIA.db"):
                                                         print("{:<20} {:<20} {:<20} {:<40} {:<20} {:<20}".format(idreserv ,nombrereservacion,fechareservacion,clientes,idturno,salas))
                                                         continue
                                             EliminarReg=int(input("Ingrese la clave del registro que desea eliminar : "))
+
                                             valor={"Eliminado":EliminarReg}
                                             cursor.execute("SELECT * FROM RESERVACION WHERE idreserv=:Eliminado",valor)
                                             regreserva = cursor.fetchall()
+
                                             if regreserva:
                                                 elire =input("Desea eliminar la reservacion [Si/No ]: ")
                                             if (not elire.upper() in "SN"):
                                                 print("Opcion no valida")
                                             if (elire.upper() == "S"):
                                                 try: #try para prevenir error de mal fecha ingresada
-                                                    fecape=input("Ingrese la fecha a eliminar: \n")
+                                                    fecape=input("Ingrese la fecha a eliminar: \n").strip()
                                                     if fecape=='':
                                                         print("No debe omitirse la fecha de la reservacion")
                                                         continue
@@ -385,7 +416,6 @@ if os.path.isfile("PIA.db"):
                     break
                 break
             continue
-       
 
         if (opmenu.upper()=="B"):#REPORTES
             while True:
@@ -415,14 +445,13 @@ if os.path.isfile("PIA.db"):
                                     cursor = conn.cursor()
                                     valor = {"fecha":fecRer}
                                     
-                                    cursor.execute("SELECT nombrereservacion,DATE(fechareservacion),idcliente,idturno,idsala FROM RESERVACION WHERE DATE(fechareservacion) = :fecha;", valor)
+                                    cursor.execute('''SELECT DATE(fechareservacion), nombrereservacion,idturno,
+                                    INNER JOIN registrocliente ON RESERVACION.idcliente=registrocliente.clientes,
+                                    INNER JOIN registrosala  ON RESERVACION.idsala=registrosala.salas
+                                    FROM RESERVACION,registrocliente,registrosala
+                                    WHERE DATE(fechareservacion) = :fecha; ''', valor)# esto no funciona 
                                     regreserva = cursor.fetchall()
-
-                                    cursor.execute("SELECT idcliente, clientes FROM registrocliente ORDER BY idcliente")
-                                    regclie= cursor.fetchall()
-                                            
-                                    cursor.execute("SELECT idsala,  salas FROM registrosala ORDER BY idsala")
-                                    regsala=cursor.fetchall()
+                                    # 
                                     
                                     if regreserva:
                                         print("--"*48)
@@ -431,7 +460,7 @@ if os.path.isfile("PIA.db"):
                                         print("{:<20} {:<20}  {:<20} {:<20} {:<20}".format('FECHA','SALA','CLIENTE','EVENTO', 'TURNO' ))
                                         print("--"*48)
                                         
-                                        for nombrereservacion,fechareservacion,idcliente,idturno,idsala in regreserva:
+                                        for fechareservacion,idcliente,idsala,nombrereservacion ,idturno in regreserva:
                                             print(f"{fechareservacion}\t{idsala}\t\t{idcliente}\t\t{nombrereservacion}\t\t{idturno}")   
                                         
                                         print("")
@@ -449,7 +478,11 @@ if os.path.isfile("PIA.db"):
                             print('Respuesta no valida: solo se acepta fecha')
                         break
                     continue
-
+                
+                if (submenure.upper()=="A"):
+                    while True:
+                        break
+                    continue
                 if (submenure.upper()=="C"):
                     break
 
@@ -459,7 +492,7 @@ if os.path.isfile("PIA.db"):
             while True:
                 Nomsala=str(input("Ingrese el nombre de la sala : ")).strip().capitalize()
                 if Nomsala=='':
-                    print("No debe omitirse el nombre del cliente")
+                    print("No debe omitirse el nombre del sala")
                     continue
                 else:
                     while True:
@@ -471,13 +504,15 @@ if os.path.isfile("PIA.db"):
                         if CupSala<=0:
                             print("Incorrecto, el cupo de la sala debe de ser mayor a 0")
                             continue
+                        elif CupSala=='':
+                            print("No debe omitirse la sala")
                         else:
                             try:
                                 with sqlite3.connect("PIA.db") as conn:
                                     cursor=conn.cursor()
                                     valores={"Nombresala":Nomsala, "Cuposala":CupSala}
                                     cursor.execute("INSERT INTO registrosala(salas,cupo_sala) VALUES(:Nombresala,:Cuposala)", valores)
-                                    print("Registro ha sido exitoso")
+                                    print(f"Registro ha sido exitoso: {valores}")
                             except Error as e:
                                 print(e)
                             except:
@@ -499,7 +534,7 @@ if os.path.isfile("PIA.db"):
                             cursor=conn.cursor()
                             valores={"Nombrecliente":Nomcliente}
                             cursor.execute("INSERT INTO registrocliente (clientes) VALUES(:Nombrecliente)", valores)
-                            print("Su registro ha sido exitosamente")
+                            print(f"Su registro ha sido exitosamente: {valores}")
                     except Error as e:
                         print(e)
                     except:
